@@ -8,4 +8,4 @@ Files the Near Mosque apps download on request. No app code lives here.
 | `books/` | Classical books of Ahl al-Sunnah: the authors' text, one PDF per printed volume, without the modern editors' notes. | The texts come from the OpenITI corpus (KITAB project), licensed [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/): free, non-commercial use with attribution, shared under the same licence. Cite: Romanov, M. & Seydi, M., *OpenITI: a Machine-Readable Corpus of Islamicate Texts*, doi:10.5281/zenodo.3082463. Typeset in Amiri (SIL Open Font License 1.1). |
 
 The apps check every file against a SHA-256 they were built with, so a changed file is never used.
-Releases are fixed by tag: `packs-v1` and `books-v1`.
+Each app version downloads from one fixed commit of this repository, so files can be added later without changing what an installed app receives.
