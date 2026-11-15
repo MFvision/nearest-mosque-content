@@ -9,9 +9,6 @@ name: Desktop downloads
 
 on:
   workflow_dispatch:
-  push:
-    branches: [claude/project-thread-t509vx]
-    paths: [.github/workflows/desktop-downloads.yml]
 
 permissions:
   contents: read
