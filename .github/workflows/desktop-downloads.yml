@@ -1,0 +1,63 @@
+name: Desktop downloads
+
+# Keeps a public copy of the Near Mosque installers for Windows and Linux in this repository's release
+# "desktop-latest", under names that never change, for the download buttons on https://nearmosque.net/:
+#   releases/download/desktop-latest/near-mosque-windows.msi, near-mosque-linux-x86_64.AppImage,
+#   near-mosque-linux-amd64.deb, SHA256SUMS.txt
+# The files are fetched from the URLs below and used only if they match the SHA-256 values written here.
+# To publish a newer version: change VERSION and the three hashes, then run this by hand.
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  VERSION: 0.5.7
+  SOURCE: https://github.com/MFvision/nearest-mosque/releases/download/desktop-latest
+  MSI_SHA256: ea2f109f18503bf1196d998481e1d63b0766c6e578b1ddc9163941b47ddd335f
+  APPIMAGE_SHA256: b3b18c42de068a195308a3c4c1542863508cb5761d1c751c70ca0321ca311f21
+  DEB_SHA256: 51880f0b0511546e85e1754bfe9e7e199af98559a0c759208949eb14016fe2a4
+
+jobs:
+  publish:
+    name: Publish desktop-latest
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: write
+    steps:
+      - name: Fetch the installers and check them
+        run: |
+          mkdir latest && cd latest
+          for f in near-mosque-windows.msi near-mosque-linux-x86_64.AppImage near-mosque-linux-amd64.deb; do
+            curl -fsSL --retry 3 -o "$f" "$SOURCE/$f"
+          done
+          printf '%s  %s\n' "$MSI_SHA256" near-mosque-windows.msi "$APPIMAGE_SHA256" near-mosque-linux-x86_64.AppImage \
+            "$DEB_SHA256" near-mosque-linux-amd64.deb | sha256sum -c -
+          sha256sum near-mosque-* > SHA256SUMS.txt
+          ls -l
+      - name: Release desktop-latest
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+        run: |
+          cat > notes.md <<NOTES
+          The newest Near Mosque for Windows and Linux: version $VERSION, under names that stay the same, for the
+          download buttons on https://nearmosque.net/.
+
+          * Windows: near-mosque-windows.msi
+          * Linux, any distribution: near-mosque-linux-x86_64.AppImage (chmod +x, then run it)
+          * Ubuntu, Debian and similar: near-mosque-linux-amd64.deb (sudo apt install ./near-mosque-linux-amd64.deb)
+
+          Check a download with sha256sum -c SHA256SUMS.txt --ignore-missing.
+          NOTES
+          title="Near Mosque for Windows and Linux (newest: $VERSION)"
+          if gh release view desktop-latest --repo "$REPO" >/dev/null 2>&1; then
+            gh release edit desktop-latest --repo "$REPO" --title "$title" --notes-file notes.md --latest=false
+            gh release upload desktop-latest --repo "$REPO" --clobber latest/*
+          else
+            gh release create desktop-latest --repo "$REPO" --target main --latest=false --title "$title" \
+              --notes-file notes.md latest/*
+          fi
